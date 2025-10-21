@@ -1,6 +1,5 @@
 name: Deploy to Ubuntu Server
 
-# Trigger this workflow on push to main
 on:
   push:
     branches:
@@ -11,43 +10,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js (version 18)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # 3️⃣ Install dependencies locally (optional, ensures workflow passes)
       - name: Install dependencies
         run: npm ci
 
-      # 4️⃣ Deploy to Ubuntu server via SSH
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.SERVER_HOST }}       # your server IP
-          username: ${{ secrets.SERVER_USER }}   # your server user
-          key: ${{ secrets.SERVER_KEY }}         # private key from GitHub Secrets
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
           script: |
-            # Trust the project directory
             git config --global --add safe.directory /www/wwwroot/covernomads-dev.mspgulf.com/backend/nheil
 
-            # Go to project folder
             cd /www/wwwroot/covernomads-dev.mspgulf.com/backend/nheil
 
-            # Pull latest code
+            # Ensure Git uses SSH instead of HTTPS (run this once manually too)
+            git remote set-url origin git@github.com:YOUR_USERNAME/YOUR_REPO.git
+
             git fetch origin main
             git reset --hard origin/main
 
-            # Install/update dependencies
             npm install
+            npm install -g pm2
 
-            # Reload Node.js app with PM2
-            #            pm2 reload backend-dev || pm2 start server.js --name backend-dev
             pm2 reload covernomads-backend || pm2 start server.js --name covernomads-backend
-            # Optional: List files to confirm deployment
-            ls -l /home/shaik/backend-dev/backend-dev
+
+            echo "✅ Deployment completed successfully on $(date)"
