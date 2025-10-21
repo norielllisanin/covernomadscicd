@@ -29,9 +29,9 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.SSH_HOST }}       # your server IP
-          username: ${{ secrets.SSH_USER }}   # your server user
-          key: ${{ secrets.SSH_KEY }}         # private key from GitHub Secrets
+          host: ${{ secrets.SERVER_HOST }}       # your server IP
+          username: ${{ secrets.SERVER_USER }}   # your server user
+          key: ${{ secrets.SERVER_KEY }}         # private key from GitHub Secrets
           script: |
             # Trust the project directory
             git config --global --add safe.directory /home/shaik/backend-dev/backend-dev
