@@ -34,6 +34,6 @@ jobs:
             npm run build
             
             # Restart Node.js app if using PM2
-            pm2 restart example || pm2 start npm --name "example" -- start
+            pm2 restart example || pm2 start npm --name "npm" -- start
 
             echo "Deployment completed at $(date)"
