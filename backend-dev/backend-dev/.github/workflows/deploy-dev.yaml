@@ -1,0 +1,73 @@
+name: Deploy cvn-backend-dev to GCP
+on:
+  push:
+    branches:
+      - dev
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Create .env File
+        run: |
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET_DEV }}" >> .env
+          echo "DB_URI=${{ secrets.DB_URI }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME_DEV }}" >> .env
+          echo 'ENVIRONMENT=development' >> .env
+          echo "EMAIL_USER=${{ secrets.EMAIL_USER }}" >> .env
+          echo "EMAIL_PASS=${{ secrets.EMAIL_PASS }}" >> .env
+          echo 'STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY_DEV }}' >> .env
+          echo 'STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET_DEV }}' >> .env
+          echo 'PARTNERS_BASE_URL=https://dev-partners.covernomads.com' >> .env
+          echo 'SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}' >> .env
+          echo 'PAYTABS_SERVER_KEY=${{ secrets.PAYTABS_SERVER_KEY_DEV }}' >> .env
+          echo 'PAYTABS_PROFILE_ID=${{ secrets.PAYTABS_PROFILE_ID_DEV }}' >> .env
+          echo 'PAYTABS_WEBHOOK_URL=https://dev-api.covernomads.com/api/quotes/payment/webhook' >> .env
+      # - name: Install dependencies
+      #   run: |
+      #     npm install
+      # - name: Deploy to GCP with zero downtime
+      #   env:
+      #     PROJECT_ID: fresh-base-423317-d9
+      #     SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SA_KEY }}
+      #   run: |
+      #     echo "$SERVICE_ACCOUNT_KEY" > $HOME/gcp-key.json
+      #     gcloud auth activate-service-account --key-file=$HOME/gcp-key.json
+      #     gcloud config set project "fresh-base-423317-d9"
+
+      #     # Deploy without promoting
+      #     gcloud app deploy app-dev.yaml --quiet --no-promote
+
+      #     # Get latest deployed version for cvn-backend-dev
+      #     VERSION_ID=$(gcloud app versions list \
+      #       --service=cvn-backend-dev \
+      #       --sort-by="~version.createTime" \
+      #       --format="value(version.id)" \
+      #       --limit=1)
+
+      #     echo "Latest version ID: $VERSION_ID"
+
+      #     # Promote it manually (zero downtime)
+      #     gcloud app services set-traffic cvn-backend-dev --splits="${VERSION_ID}=1" --quiet
+
+      - name: Install dependencies
+        run: npm install
+      - name: Deploy to GCP with zero downtime
+        env:
+          PROJECT_ID: fresh-base-423317-d9
+          SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          echo "$SERVICE_ACCOUNT_KEY" > $HOME/gcp-key.json
+          gcloud auth activate-service-account --key-file=$HOME/gcp-key.json
+          gcloud config set project "$PROJECT_ID"
+
+          gcloud app deploy app-dev.yaml --quiet --no-promote
+          NEW_VERSION=$(gcloud app versions list \
+           --service=cvn-backend-dev \
+           --sort-by="~version.createTime" \
+           --format="value(version.id)" \
+           --limit=1)
+
+          echo "New version deployed: $NEW_VERSION"
+          gcloud app services set-traffic cvn-backend-dev --splits="${NEW_VERSION}=1" --quiet

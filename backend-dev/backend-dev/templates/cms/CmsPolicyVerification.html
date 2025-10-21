@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<title>Travel Insurance Policy</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+			integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+			crossorigin="anonymous"
+		/>
+		<link
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+			rel="stylesheet"
+		/>
+		<style>
+			p {
+				margin: 0;
+			}
+			h1 {
+				color: rgb(14, 27, 76);
+				font-weight: 900;
+				font-size: 20px;
+			}
+			h2 {
+				color: rgb(14, 27, 76);
+				font-weight: 600;
+				font-size: 16px;
+			}
+			body {
+				font-family: 'Poppins', sans-serif;
+				background-color: #f8f9fa;
+			}
+			.container {
+				padding: 20px;
+				margin-top: 20px;
+			}
+			.policy-status {
+				background-color: #d4f4f0;
+				padding: 15px;
+				border-radius: 8px;
+				text-align: center;
+				margin-bottom: 20px;
+			}
+			.footer {
+				background-color: #4e44e2;
+				padding: 10px;
+				text-align: center;
+				font-size: 12px;
+				color: white;
+				margin-top: 20px;
+			}
+			.table th,
+			.table td {
+				border-top: none;
+			}
+			.card {
+				background-color: white;
+				border-radius: 4px;
+				box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+				padding: 20px;
+				height: 100%;
+			}
+			.subtext {
+				font-size: 14px;
+				font-weight: 300;
+			}
+			.policy-holder-name {
+				font-size: 25px;
+				font-weight: 800;
+			}
+			.valid {
+				background-color: #358542;
+			}
+			.invalid {
+				background-color: #9d0505;
+			}
+			.policy-detail {
+				font-size: 14px;
+				font-weight: 500;
+			}
+			.logo {
+				margin: 30px 70px;
+			}
+			.text-bold {
+				font-weight: 500;
+				padding-top: 5px;
+				padding-bottom: 5px;
+			}
+		</style>
+	</head>
+	<body>
+		<img
+			src="{{logo}}"
+			alt="GIG Logo"
+			class="logo"
+			style="max-width: 150px"
+		/>
+		<div class="container">
+			<div class="row d-flex justify-content-center">
+				<div class="col-md-7">
+					<div class="row">
+						<div class="col-md-12">
+							<h1 class="mb-3">Travel Insurance Policy</h1>
+						</div>
+						<div class="col-md-6">
+							<div class="card">
+								<p class="subtext">Insured Name:</p>
+								<p class="policy-holder-name">
+									{{policyHolder.firstName}} {{policyHolder.lastName}}
+								</p>
+							</div>
+						</div>
+						<div class="col-md-6 mt-3 mt-md-0">
+							{{#if isValid}}
+							<div class="valid card">
+								<p class="text-white text-center">
+									<i
+										style="font-size: 30px"
+										class="fas fa-check-circle"
+									></i>
+								</p>
+								<p class="text-white text-center">Policy Status: Valid</p>
+								<p class="text-white subtext text-center">
+									Policy number: {{policyNumber}}
+								</p>
+							</div>
+							{{else}}
+							<div class="invalid card">
+								<p class="text-white text-center">
+									<i
+										style="font-size: 30px"
+										class="fas fa-circle-xmark"
+									></i>
+								</p>
+								<p class="text-white text-center">Policy Status: Expired</p>
+								<p class="text-white subtext text-center">
+									Policy number: {{policyNumber}}
+								</p>
+							</div>
+							{{/if}}
+						</div>
+						<div class="col-md-12 mt-3">
+							<div class="card">
+								<h2 class="mb-4">Policy Details</h2>
+								<div class="d-flex justify-content-between">
+									<p class="subtext">Period:</p>
+									<p class="policy-detail">
+										{{departureDate}} to {{policyEndDate}}
+									</p>
+								</div>
+								<hr />
+								<div class="d-flex justify-content-between">
+									<p class="subtext">Policy Type:</p>
+									<p class="policy-detail">{{policyType}}</p>
+								</div>
+								<hr />
+								<div class="d-flex justify-content-between">
+									<p class="subtext">Area of Travel:</p>
+									<p class="policy-detail">{{coverage}}</p>
+								</div>
+								<hr />
+								<div class="d-flex justify-content-between">
+									<p class="subtext">Duration:</p>
+									<p class="policy-detail">upto {{duration}} days</p>
+								</div>
+							</div>
+						</div>
+						<div class="col-md-12 mt-3">
+							<div class="card">
+								<h2 class="mb-4">Other Beneficiaries</h2>
+								{{#each passengers}}
+								<div class="d-flex justify-content-between">
+									<p class="subtext">Name ({{this.number}}):</p>
+									<p class="policy-detail">
+										{{this.firstName}} {{this.lastName}}
+									</p>
+								</div>
+								<hr />
+								{{/each}}
+								<br />
+								<p>Yours sincerely,</p>
+
+								<p>CHOLAMANDALAM FINANCIAL HOLDINGS LIMITED</p>
+								<strong style="color: green"
+									>WhatsApp Support: +91 8080824444</strong
+								>
+
+								<br />
+
+								<strong>
+									The travel insurance plan is underwritten by Cholamandalam MS
+									General Insurance Company Ltd. Reg office: 2nd Floor, "Dare
+									House", No.2, NSC Bose Road, Chennai - 600001, India. CIN
+									:U66030TN2001PLC047977. IRDAI Registration Number 123. Trade
+									logo displayed belongs to ‘CHOLAMANDALAM FINANCIAL HOLDINGS
+									LIMITED” and Mitsui Sumitomo Insurance Company Limited and
+									used by Chola MS under license.
+								</strong>
+								<!-- <p class="text-bold">
+													Copyright © 2025 Covernomads and ISA Insurance & Reinsurance Brokerage
+													(ISA RE) LTD
+												</p> -->
+								<br />
+								<strong class="text-bold">All rights reserved.</strong>
+								<br />
+								<p>
+									CONFIDENTIAL: This email and any files transmitted with it are
+									confidential and intended solely for the use of the individual
+									or entity to whom they are addressed. If you have received
+									this email in error, please notify the system manager. This
+									message contains confidential information and is intended only
+									for the individual named. If you are not the named addressee
+									you should not disseminate, distribute or copy this e-mail.
+									Please notify the sender immediately by e-mail if you have
+									received this e-mail by mistake and delete this e-mail from
+									your system. If you are not the intended recipient you are
+									notified that disclosing, copying, distributing or taking any
+									action in reliance on the contents of this information is
+									strictly prohibited.
+								</p>
+								<br />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

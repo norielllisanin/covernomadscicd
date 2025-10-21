@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<style>
+		body {
+			font-family: 'Poppins', sans-serif !important;
+		}
+		p {
+			margin: 0 !important;
+		}
+		.mb {
+			margin-bottom: 20px !important;
+		}
+		.text-bold {
+			font-weight: 500;
+			padding-top: 5px;
+			padding-bottom: 5px;
+		}
+		.number {
+			color: green;
+		}
+	</style>
+	<body>
+		<!-- images  -->
+		<!-- <p>Dear Partner,</p> -->
+		<div
+			style="
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				text-align: center;
+				height: 150px;
+			"
+		>
+			<img
+				src="https://storage.googleapis.com/coi_templates/cms_portal/CMS%20Brand%20Logo.png"
+				alt="Image"
+				style="max-width: 100%; max-height: 100%; object-fit: contain"
+			/>
+		</div>
+		<p>Dear {{firstName}} {{lastName}},</p>
+		<p><strong>Product:</strong> {{productName}} Travel Insurance</p>
+		<p class="mb"><strong>Number:</strong> {{policyNumber}}</p>
+		<!-- <p><strong>Product:</strong> {{productName}} Travel Insurance</p>
+		<p class="mb"><strong>Number:</strong> {{policyNumber}}</p> -->
+		<p>
+			This is a written confirmation to inform you that your policy is now
+			canceled with immediate effect upon receiving an online request. You may
+			access your cancelled certificate of insurance by clicking the link below
+		</p>
+		<!-- <p>
+			This policy may have been canceled due to correction in data if
+			applicable.
+		</p>
+		<p>
+			If you have any remaining balance or credit reversal, it will be processed
+			and reversed to your account with immediate basis which can be checked by
+			logging into the portal.
+		</p>
+		<p>If there is anything we can do to assist you please let us know.</p>
+		<p>Thank you for your attention to this matter.</p> -->
+		<ul style="display: flex; gap: 2px">
+			<li>
+				<a
+					href="{{coiLink}}"
+					target="_blank"
+				>
+					Certificate of Insurance
+				</a>
+			</li>
+			<span>(<strong style="color: red">Cancelled</strong>)</span>
+		</ul>
+		<p>
+			This policy may have been canceled due to correction in data if applicable
+			and requested. Your refund will be processed in 7-15 working days based on
+			your source account or bank information provided. If there is anything we
+			can do to assist you please let us know. Thank you for your attention to
+			this matter.
+		</p>
+		<br />
+		<p>Yours sincerely,</p>
+
+		<p>CHOLAMANDALAM FINANCIAL HOLDINGS LIMITED</p>
+		<strong style="color: green">WhatsApp Support: +91 8080824444</strong>
+
+		<br />
+
+		<strong>
+			The travel insurance plan is underwritten by Cholamandalam MS General
+			Insurance Company Ltd. Reg office: 2nd Floor, "Dare House", No.2, NSC Bose
+			Road, Chennai - 600001, India. CIN :U66030TN2001PLC047977. IRDAI
+			Registration Number 123. Trade logo displayed belongs to ‘CHOLAMANDALAM
+			FINANCIAL HOLDINGS LIMITED” and Mitsui Sumitomo Insurance Company Limited
+			and used by Chola MS under license.
+		</strong>
+		<br />
+		<strong>All rights reserved.</strong>
+		<p>
+			CONFIDENTIAL: This email and any files transmitted with it are
+			confidential and intended solely for the use of the individual or entity
+			to whom they are addressed. If you have received this email in error,
+			please notify the system manager. This message contains confidential
+			information and is intended only for the individual named. If you are not
+			the named addressee you should not disseminate, distribute or copy this
+			e-mail. Please notify the sender immediately by e-mail if you have
+			received this e-mail by mistake and delete this e-mail from your system.
+			If you are not the intended recipient you are notified that disclosing,
+			copying, distributing or taking any action in reliance on the contents of
+			this information is strictly prohibited.
+		</p>
+		<br />
+	</body>
+</html>

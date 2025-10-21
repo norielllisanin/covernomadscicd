@@ -1,0 +1,778 @@
+const { jsPDF } = require('jspdf');
+const { addPassangerNoInPolicyNumber } = require('../generatePolicyNumber');
+const { roundToTwoDecimals } = require('../../utils');
+
+require('jspdf-autotable');
+
+const HEADER_MARGIN = 50;
+
+const TEXT_FONT_SIZE = 8;
+const SUBHEADING_FONT_SIZE = 10;
+const HEADING_FONT_SIZE = 12;
+const FOOTER_MARGIN = 35;
+
+const { blodArabicBase64Font, normalArabicBase64Font } = require('../Fonts');
+
+// Function to convert an image URL to base64
+async function getBase64FromUrl(url) {
+	const response = await fetch(url);
+	const arrayBuffer = await response.arrayBuffer();
+	const buffer = Buffer.from(arrayBuffer);
+	return buffer.toString('base64');
+}
+const generateIhoCoi = async ({ insurerCode, data }) => {
+	if (insurerCode === 'IHO' || insurerCode === 'ORT') {
+		const doc = new jsPDF('p', 'mm', 'a4');
+
+		doc.addFileToVFS('Amiri-Regular.ttf', normalArabicBase64Font);
+		doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
+		doc.addFileToVFS('Amiri-Bold.ttf', blodArabicBase64Font);
+		doc.addFont('Amiri-Bold.ttf', 'Amiri', 'bold');
+
+		jsPDF.API.events.push([
+			'addFonts',
+			function () {
+				this.addFileToVFS('Amiri-Regular.ttf', arabicFont);
+				this.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
+			},
+		]);
+
+		const pageWidth = doc.internal.pageSize.getWidth();
+
+		const pageHeight =
+			data && data.productCode === 'ELTNMD'
+				? doc.internal.pageSize.getHeight() + 10
+				: doc.internal.pageSize.getHeight();
+		let passengerCounter = 0;
+		const headerImgBase64 = await getBase64FromUrl(
+			'https://storage.googleapis.com/coi_templates/IHO/iho-logo.png'
+		);
+		const signatureImgBase64 = await getBase64FromUrl(
+			'https://storage.googleapis.com/coi_templates/IHO/iho-signature.png'
+		);
+		const stampImgBase64 = await getBase64FromUrl(
+			'https://storage.googleapis.com/coi_templates/IHO/iho-stamp.png'
+		);
+
+		const ribbonImgBase64 = await getBase64FromUrl(
+			'https://storage.googleapis.com/coi_templates/IHO/Coi_footer_image.png' // Replace with your actual ribbon image URL
+		);
+		const stampAndSignature = await getBase64FromUrl(
+			'https://storage.googleapis.com/coi_templates/IHO/new-stemp.jpeg'
+		);
+
+		for (let passenger of data.passengers) {
+			passengerCounter++;
+			doc
+				.setFontSize(HEADING_FONT_SIZE)
+				.setTextColor(0, 0, 0)
+				.setFont(undefined, 'bold')
+				.text('TRAVEL INSURANCE CERTIFICATE', pageWidth / 2, 55, {
+					align: 'center',
+				});
+
+			// Policy Details Table
+			doc.autoTable({
+				startY: 60,
+				body: [['Policy Details']],
+				theme: 'plain',
+				styles: {
+					halign: 'left',
+					fillColor: [94, 128, 63],
+					fontSize: SUBHEADING_FONT_SIZE,
+					cellPadding: 1,
+					fontStyle: 'bold',
+					textColor: [255, 255, 255],
+				},
+			});
+			doc.autoTable({
+				startY: doc.lastAutoTable.finalY + 1,
+				body: [[`Name: ${passenger.firstName} ${passenger.lastName}`]],
+				theme: 'plain',
+				styles: {
+					halign: 'left',
+					fontSize: TEXT_FONT_SIZE,
+					cellPadding: 1,
+					fontStyle: 'bold',
+				},
+			});
+
+			const policyDetails = [
+				[`Product: ${data.policyType}`, `Business Code: ${data.agencyCode}`],
+				[
+					`Area of Cover: ${
+						data?.productCode === 'AHLPLT' ? 'INBOUND' : data.coverage
+					}`,
+					`Policy Number: ${addPassangerNoInPolicyNumber({
+						policy: data.policyNumber,
+						passangerNo: passengerCounter,
+					})}     ${
+						data?.status?.toLowerCase() === 'cancelled'
+							? data?.status?.toUpperCase()
+							: ''
+					}`,
+				],
+				[
+					`Duration (in days): ${data.duration}`,
+					`Issuing Date: ${data.issueDate}`,
+				],
+				[
+					`Number of members: ${data.passengers.length}`,
+					`Policy Type: ${
+						data.duration > 90 ? 'Multiple Trips' : 'Single Journey'
+					}`,
+				],
+				[
+					`ID Type: Passport`,
+					`Period of cover: ${data.policyStartDate} ${
+						data.returnTrip ? `to ${data.policyEndDate}` : ''
+					} `,
+				],
+				[
+					`ID Number: ${passenger.passportNumber}`,
+					`Nationality: ${passenger.nationality}`,
+				],
+				[`Email: ${passenger.email}`, `Issued By: ${data.issuedBy}`],
+				[`Date of Birth: ${passenger.dob}`, `Gender: ${passenger.gender}`],
+			];
+			doc.autoTable({
+				startY: doc.lastAutoTable.finalY + 1,
+				body: policyDetails.map((row) => row.map((cell) => cell || '')),
+				styles: {
+					fontSize: TEXT_FONT_SIZE,
+					cellPadding: 1,
+					fontStyle: 'bold',
+					textColor: [0, 0, 0],
+				},
+				didParseCell: function (data) {
+					if (data.cell.raw.includes('CANCELLED')) {
+						data.cell.styles.textColor = [255, 0, 0]; // Red color
+						data.cell.styles.fontStyle = 'bold'; // Bold font
+					}
+				},
+			});
+
+			// Insured Name Table
+			// doc.autoTable({
+			// 	startY: doc.lastAutoTable.finalY + 7,
+			// 	body: [['Insured Member']],
+			// 	theme: 'plain',
+			// 	styles: {
+			// 		halign: 'left',
+			// 		fillColor: [94, 128, 63],
+			// 		fontSize: SUBHEADING_FONT_SIZE,
+			// 		cellPadding: 1,
+			// 		fontStyle: 'bold',
+			// 		textColor: [255, 255, 255],
+			// 	},
+			// });
+			// const insuredName = [
+			// 	[
+			// 		passenger.gender,
+			// 		passenger.firstName,
+			// 		passenger.lastName,
+			// 		passenger.dob,
+			// 		passenger.passportNumber,
+			// 	],
+			// ];
+			// doc.autoTable({
+			// 	startY: doc.lastAutoTable.finalY + 5,
+			// 	head: [
+			// 		['Gender', 'First Name', 'Last Name', 'Date of Birth', 'Passport #'],
+			// 	],
+			// 	body: insuredName.map((row) => row.map((cell) => cell || '')),
+			// 	theme: 'grid',
+			// 	headStyles: {
+			// 		fillColor: null,
+			// 		lineWidth: 0.3,
+			// 		lineColor: [0, 0, 0],
+			// 		textColor: '#000000',
+			// 	},
+			// 	bodyStyles: {
+			// 		lineWidth: 0.3,
+			// 		lineColor: [0, 0, 0],
+			// 	},
+			// 	styles: {
+			// 		fontSize: TEXT_FONT_SIZE,
+			// 		cellPadding: 1,
+			// 		fontStyle: 'bold',
+			// 		textColor: '#000000',
+			// 	},
+			// });
+
+			// AddsOn Name Table
+			if (data?.productCode === 'ELTNMD' && data.addOns.length > 0) {
+				doc.autoTable({
+					startY: doc.lastAutoTable.finalY + 2,
+					body: [['AddOns']],
+					theme: 'plain',
+					styles: {
+						halign: 'left',
+						fillColor: [94, 128, 63],
+						fontSize: SUBHEADING_FONT_SIZE,
+						cellPadding: 1,
+						fontStyle: 'bold',
+						textColor: [255, 255, 255],
+					},
+				});
+				const addOns = data?.addOns?.map((addOn) => [
+					addOn?.label,
+					roundToTwoDecimals(data?.totalPremium.AED * addOn?.multiplier),
+				]);
+				doc.autoTable({
+					startY: doc.lastAutoTable.finalY + 2,
+					head: [['AddOns', 'Price']],
+					body: addOns?.map((row) => row?.map((cell) => cell || '')),
+					theme: 'grid',
+					headStyles: {
+						fillColor: null,
+						lineWidth: 0.3,
+						lineColor: [0, 0, 0],
+						textColor: '#000000',
+					},
+					bodyStyles: {
+						lineWidth: 0.3,
+						lineColor: [0, 0, 0],
+					},
+					styles: {
+						fontSize: TEXT_FONT_SIZE,
+						cellPadding: 1,
+						fontStyle: 'bold',
+						textColor: '#000000',
+					},
+				});
+			}
+
+			//Benefits Table
+			doc.autoTable({
+				startY: doc.lastAutoTable.finalY + 6,
+				body: [['Policy Benefit and Limits']],
+				theme: 'plain',
+				styles: {
+					halign: 'left',
+					fillColor: [94, 128, 63],
+					fontSize: SUBHEADING_FONT_SIZE,
+					cellPadding: 1,
+					fontStyle: 'bold',
+					textColor: [255, 255, 255],
+				},
+			});
+
+			const processedBenefits = data.benefits?.map((benefit) => {
+				// Check if the value is "Free Service"
+				if (benefit.value === 'Free Service') {
+					return {
+						...benefit,
+						value: benefit.value, // Update to show "Free"
+					};
+				}
+
+				const values = benefit.value.split(' | '); // Split value string
+				let selectedValue;
+
+				// Determine the value based on the coverage type
+				if (data.coverage === 'Worldwide EXCL - USA, CAN') {
+					selectedValue = values[1]; // Pick the second value
+				} else if (data.coverage === 'Worldwide') {
+					selectedValue = values[2]; // Pick the last value
+				} else {
+					selectedValue = values[0]; // Default to the first value
+				}
+
+				return {
+					...benefit,
+					value: selectedValue, // Update the value field
+				};
+			});
+			const paidBenefits = processedBenefits.map((b) => [b.item, b.value]);
+
+			doc.autoTable({
+				startY: doc.lastAutoTable.finalY + 4,
+				head: [['BENEFITS', 'LIMITS']],
+				body: [...paidBenefits],
+				theme: 'grid',
+				columnStyles: {
+					1: { halign: 'center', valign: 'middle' },
+				},
+				headStyles: {
+					fillColor: null,
+					lineWidth: 0.3,
+					lineColor: [0, 0, 0],
+					halign: 'center',
+					textColor: '#000000',
+				},
+				bodyStyles: {
+					lineWidth: 0.3,
+					lineColor: [0, 0, 0],
+				},
+				styles: {
+					fontSize: TEXT_FONT_SIZE,
+					cellPadding: 1,
+					fontStyle: 'bold',
+					textColor: '#000000',
+				},
+				margin: { top: HEADER_MARGIN, bottom: FOOTER_MARGIN }, // Set bottom margin to avoid footer overlap
+				didDrawPage: (data) => {
+					// data.settings.margin.top = HEADER_MARGIN;
+					// Draw footer
+					// const pageHeight = doc.internal.pageSize.height;
+					// const footerY = pageHeight - FOOTER_MARGIN / 2; // Adjust positioning as needed
+					// doc.setFontSize(TEXT_FONT_SIZE);
+					// doc.text(`Page ${data.pageNumber}`, 10, footerY);
+				},
+			});
+
+			doc.setFontSize(6);
+			doc.text(
+				'Above sums insured are per person & per period of cover',
+				15,
+				doc.lastAutoTable.finalY + 4
+			);
+			// Important Notes Table
+			if (data.productCode === 'AHLPLT' || data.productCode === 'AHLDMD') {
+				doc.autoTable({
+					startY: doc.lastAutoTable.finalY + 10,
+					body: [['Important Notes']],
+					theme: 'plain',
+					styles: {
+						halign: 'left',
+						fillColor: [94, 128, 63],
+						fontSize: SUBHEADING_FONT_SIZE,
+						cellPadding: 1,
+						fontStyle: 'bold',
+						textColor: [255, 255, 255],
+					},
+					margin: { top: HEADER_MARGIN, bottom: FOOTER_MARGIN },
+				});
+				const notes = [
+					[
+						'\u2022 Excess shall vary based on age of the insured. Please refer to the policy wordings for details.',
+					],
+					[
+						'\u2022 If your date of entry to UAE, changes from the dates shown on the certificate of insurance, your coverage dates will be automatically amended to start from the date you entered the UAE (as stamped on your passport or immigration data in case of e-gates entries) or after 60 days from visa start whichever is earlier and run for the same duration as original policy period along with grace period of 10 days on Ahlain platinum plan.',
+					],
+					[
+						'\u2022 Inbound plans having 180 days duration, covers multiple entries to the UAE within the policy period',
+					],
+				];
+				doc.autoTable({
+					startY: doc.lastAutoTable.finalY + 2,
+					body: notes,
+					theme: 'plain',
+					styles: {
+						fontSize: TEXT_FONT_SIZE,
+						cellPadding: 1,
+						textColor: '#000000',
+					},
+					margin: { top: HEADER_MARGIN, bottom: FOOTER_MARGIN },
+					// didDrawPage: (data) => {
+					// 	data.settings.margin.top = HEADER_MARGIN;
+					// },
+				});
+			}
+
+			// Claim Assistance Table
+			let gap =
+				data.productCode === 'SMTNMD' ||
+				data.productCode === 'OTBGLD' ||
+				data.productCode === 'ELTFAM' ||
+				data.productCode === 'LITNMD'
+					? 15
+					: data.productCode === 'OTBBRZ'
+					? 3
+					: 8;
+			doc.autoTable({
+				startY: doc.lastAutoTable.finalY + gap,
+				body: [['General Conditions']],
+				theme: 'plain',
+				styles: {
+					halign: 'left',
+					fillColor: [94, 128, 63],
+					fontSize: SUBHEADING_FONT_SIZE,
+					cellPadding:
+						data.productCode === 'OTBBRZ' || data.productCode === 'INBPLT'
+							? 1
+							: 3,
+					fontStyle: 'bold',
+					textColor: [255, 255, 255],
+				},
+				margin: { top: HEADER_MARGIN, bottom: FOOTER_MARGIN },
+			});
+			const conditions = [
+				[
+					'\u2022 This Travel Insurance Certificate contains a summary of cover only.',
+				],
+				[
+					'\u2022 For full terms, conditions and exclusions, please refer to the policy wording',
+				],
+				[
+					'\u2022 Outbound cover is applicable from country of departure, Inbound cover is applicable to travelers visiting United Arab Emirates for a limited duration as specified by the policy',
+				],
+				[
+					'\u2022 Any changes to your policy document shall be requested before policy start date',
+				],
+				[
+					'\u2022 All material facts to be disclosed and failure to do so will invalidate this policy and related covers',
+				],
+				[
+					'\u2022 The scope of cover under the subject policy excludes losses or claims due to incidents occurred within the geographical area of any country declared by the United Nations as a war zone',
+				],
+				[
+					'\u2022 In case of illness due to infectious disease such as Covid-19 in any country apart from the country trip originated from, we shall pay for the emergency medical expenses as per the terms and conditions mentioned in the policy wording',
+				],
+				[
+					'\u2022 For Medical Emergencies, please call on below numbers or write to claims@isa-assist.com',
+				],
+			];
+			doc.autoTable({
+				startY: doc.lastAutoTable.finalY + 2,
+				body: conditions,
+				theme: 'plain',
+				styles: {
+					fontSize: TEXT_FONT_SIZE,
+					cellPadding: 1,
+					textColor: '#000000',
+				},
+				margin: { top: HEADER_MARGIN, bottom: FOOTER_MARGIN },
+				// didDrawPage: (data) => {
+				// 	data.settings.margin.top = HEADER_MARGIN;
+				// },
+			});
+			const claimAssisstance = [
+				['WORLDWIDE', '+457 87 23 479'],
+				['UK', '+44 1513 2500 56'],
+				['USA', '+1 954 239 1266'],
+				['UAE', '+971 8000 651 21 26'],
+				['THAILAND', '+66 600 035 532'],
+				['LEBANON', '+961 1 517 107'],
+			];
+			doc.autoTable({
+				startY: doc.lastAutoTable.finalY + 5,
+				tableWidth: 100,
+				body: claimAssisstance,
+				theme: 'grid',
+				styles: {
+					fontSize: TEXT_FONT_SIZE,
+					cellPadding: 1,
+					textColor: '#000000',
+					fontStyle: 'bold',
+				},
+				margin: { top: HEADER_MARGIN, bottom: FOOTER_MARGIN, left: 55 },
+				// didDrawPage: (data) => {
+				// 	data.settings.margin.top = HEADER_MARGIN;
+				// },
+			});
+
+			// Removing spaces from SCH product
+			let exclusions = [
+				'OTBSLV',
+				'ELTNMD',
+				'SCHPRM',
+				'SMTNMD',
+				'SPMNMD',
+				'INBPLT',
+				'PRMNMD',
+				'AHLPLT',
+				'AHLDMD',
+				'OTBGLD',
+				'OTBPLT',
+				'OTBFAM',
+				'OTBBRZ',
+				'VIP',
+				'ELTFAM',
+				'LITNMD',
+			].includes(data.productCode)
+				? [
+						[
+							'\u2022 Sanctions and Limitations Exclusions\nWe shall not be deemed to provide cover and we shall not be liable to pay any claim or provide any benefit hereunder to the extent that the provision of such cover, payment of such claim or provision of such benefit would expose us to any sanctions, prohibitions orestrictions under United Nations resolutions or the trade or the economic sanctions, laws or regulations of the European Union, United Kingdon or United States of America.',
+						],
+						[
+							'\u2022 Applicable Taxes\nYou accept and agree to pay any taxes on this policy, in compliance with the laws and regulations applicable in the territory of sale, including but not limited to value added tax (“VAT”) which are due on your policy. Failure by you to pay any applicable taxes may result in your policy being rendered null and void or cancelled at Insurance House’s discretion.',
+						],
+						[
+							'\u2022 Notes\nCoverage starts when the insured leaves the country of his residence and ceases in case, the insured returns to his country of residence, or number of days elapsed.\nExcess is chargeable depending on the age of the insured. Please refer to the excess table in policy wording documents.',
+						],
+				  ]
+				: [
+						[''],
+						[''],
+						[
+							'\u2022 Sanctions and Limitations Exclusions\nWe shall not be deemed to provide cover and we shall not be liable to pay any claim or provide any benefit hereunder to the extent that the provision of such cover, payment of such claim or provision of such benefit would expose us to any sanctions, prohibitions orestrictions under United Nations resolutions or the trade or the economic sanctions, laws or regulations of the European Union, United Kingdon or United States of America.',
+						],
+						[''],
+						[''],
+						[''],
+						[
+							'\u2022 Applicable Taxes\nYou accept and agree to pay any taxes on this policy, in compliance with the laws and regulations applicable in the territory of sale, including but not limited to value added tax (“VAT”) which are due on your policy. Failure by you to pay any applicable taxes may result in your policy being rendered null and void or cancelled at Insurance House’s discretion.',
+						],
+						[
+							'\u2022 Notes\nCoverage starts when the insured leaves the country of his residence and ceases in case, the insured returns to his country of residence, or number of days elapsed.\nExcess is chargeable depending on the age of the insured. Please refer to the excess table in policy wording documents.',
+						],
+						[''],
+						[''],
+						[''],
+				  ];
+
+			let space =
+				data.productCode === 'SMTNMD' ||
+				data.productCode === 'OTBGLD' ||
+				data.productCode === 'ELTFAM' ||
+				data.productCode === 'LITNMD'
+					? 15
+					: data.productCode === 'OTBBRZ' || data.productCode === 'INBPLT'
+					? 2
+					: 6;
+
+			doc.autoTable({
+				startY: doc.lastAutoTable.finalY + space,
+				body: exclusions,
+				theme: 'plain',
+				styles: {
+					fontSize: TEXT_FONT_SIZE,
+					cellPadding: data.productCode === 'OTBBRZ' ? 1 : 3,
+					textColor: '#000000',
+				},
+				margin: { top: HEADER_MARGIN, bottom: FOOTER_MARGIN },
+				// didDrawPage: (data) => {
+				// 	data.settings.margin.top = HEADER_MARGIN;
+				// },
+			});
+
+			//Add siugnature text
+			doc.setFontSize(TEXT_FONT_SIZE);
+			doc.text(
+				'Authorized Signatory and Stamp',
+				pageWidth - 73,
+				doc.lastAutoTable.finalY + 8
+			);
+			//Add siugnature
+			// doc.addImage(
+			// 	`data:image/png;base64,${signatureImgBase64}`,
+			// 	'PNG',
+			// 	pageWidth - 40,
+			// 	doc.lastAutoTable.finalY + 15,
+			// 	25,
+			// 	25
+			// );
+			//Add stamp
+			// doc.addImage(
+			// 	`data:image/png;base64,${stampImgBase64}`,
+			// 	'PNG',
+			// 	pageWidth - 80,
+			// 	doc.lastAutoTable.finalY + 10,
+			// 	40,
+			// 	40
+			// );
+
+			doc.addImage(
+				`data:image/png;base64,${stampAndSignature}`,
+				'PNG',
+				pageWidth - 80,
+				doc.lastAutoTable.finalY + 10,
+				70, // Increased width
+				50 // Adjust height to match the width, or you can set it as per your requirement
+			);
+			if (passengerCounter != data.passengers.length) doc.addPage();
+		}
+
+		//add QR code and header to all pages except first one
+		const pageCount = doc.internal.getNumberOfPages();
+		let currentPage = 1;
+		while (currentPage <= pageCount) {
+			doc.setPage(currentPage);
+
+			doc.setFontSize(10);
+			doc.setTextColor('#5e803f');
+			doc.setFont('Helvetica', 'bold');
+			doc.text('Insurance House P.J.S.C.', 15, 15);
+
+			doc.setFontSize(8);
+			doc.setTextColor('#000000');
+			doc.setFont('Helvetica', 'normal');
+			doc.text('Incorporated In Abu Dhabi', 15, 22);
+			doc.text('subject to the provisions of', 15, 26);
+			doc.text('Fedreral Law No.(6)', 15, 30);
+			doc.text('Commericial License No. 1200435', 15, 34);
+			doc.text('Paid up Capital: AED 118,780,500', 15, 38);
+			doc.text('Tax Registration No. 1002676868', 15, 42);
+
+			// Add Arabic header text
+			doc.setFont('Amiri', 'bold');
+			doc.setFontSize(10);
+			doc.setTextColor('#5e803f');
+			doc.text('بيت التأمين ش.م.ع.', pageWidth - 15, 15, { align: 'right' });
+
+			doc.setFont('Amiri', 'normal');
+			doc.setFontSize(8);
+			doc.setTextColor('#000000');
+
+			// Arabic texts with proper right alignment
+			const arabicTexts = [
+				'مسجلة في أبوظبي رهناً بأحكام القانون الاتحادي رقم (6)',
+				'رخصة تجارية رقم 1200435',
+				'رأس المال المدفوع: 118,780,500 درهم إماراتي',
+				'رقم التسجيل الضريبي: 100287232100003',
+				'الأعمال تحت إشراف الهيئة العليا للتأمين',
+			];
+
+			let yPosition = 22; // Starting Y position for Arabic text
+			arabicTexts.forEach((text) => {
+				doc.text(text, pageWidth - 15, yPosition, { align: 'right' });
+				yPosition += 5; // Increment position for next line
+			});
+
+			// Add header image
+			doc.addImage(
+				`data:image/png;base64,${headerImgBase64}`,
+				'PNG',
+				80,
+				10,
+				40,
+				30
+			);
+
+			// Add header image
+			// doc.addImage(
+			// 	`data:image/png;base64,${headerImgBase64}`,
+			// 	'PNG',
+			// 	15,
+			// 	10,
+			// 	40,
+			// 	20
+			// );
+			// // Add QR code
+			// if (data.policyQr) {
+			// 	doc.addImage(data.policyQr, 'PNG', pageWidth - 45, 7, 25, 25);
+			// 	doc
+			// 		.setFontSize(10)
+			// 		.setTextColor(0, 0, 0)
+			// 		.text('Scan to validate', pageWidth - 33, 37, { align: 'center' });
+			// }
+			//add green separator
+			// doc.setFillColor(94, 128, 63);
+			// doc.rect(15, 40, pageWidth - 30, 2, 'F');
+			//add page numbering
+			doc.setPage(currentPage);
+			doc.setFontSize(7);
+			doc.setTextColor('#4D4E53');
+			doc.text(`Page ${currentPage} of ${pageCount}`, 7, 7);
+			currentPage++;
+		}
+		//add footer to all pages
+		if (pageCount > 0) {
+			let currentPage = 1;
+			while (currentPage <= pageCount) {
+				//add green separator
+				// doc.setFillColor(94, 128, 63);
+				// doc.rect(15, pageHeight - 20, pageWidth - 30, 2, 'F');
+				//add footer text
+				doc.setPage(currentPage);
+				// doc.setFontSize(7);
+				// doc.setTextColor('#4D4E53');
+				// doc.setFont(undefined, 'normal');
+				// doc.text(
+				// 	'Travel Insurance plans are issued and insured by Insurance House PJSC, licensed by the UAE Insurance Authority, Registration number 89. Registered office at Orjowan Building, Zayed 1st Street, Khalidiya Area, P.O.Box: 129921, Abu Dhabi, U.A.E.',
+				// 	pageWidth / 2,
+				// 	pageHeight - 15,
+				// 	{ maxWidth: pageWidth - 30, align: 'center' }
+				// );
+				// doc.setFont(undefined, 'bold');
+				// doc.text(
+				// 	'This Document is not valid without the QR Code with “Green” Status, please scan the QR code on top right corner to know the status of your policy. Do not accept this document without the QR code.',
+				// 	pageWidth / 2,
+				// 	pageHeight - 8,
+				// 	{ maxWidth: pageWidth - 30, align: 'center' }
+				// );
+
+				const qrWidth = 15;
+				const qrHeight = 15;
+				const paddingRight = 6;
+				const paddingBottom = 5;
+
+				const qrX = pageWidth - qrWidth - paddingRight;
+				const qrY = pageHeight - qrHeight - paddingBottom;
+
+				const textContentWidth = pageWidth - qrWidth - 20;
+
+				const textX = 10;
+				const firstLineY = pageHeight - 15; // Pehla line thoda upar
+				const secondLineY = pageHeight - 8; // Doosra line thoda neeche
+				// const ribbonHeight = 4; // Adjust height as needed
+
+				// doc.setFillColor(94, 128, 63);
+				// doc.rect(0, pageHeight - 23, pageWidth, 2, 'F');
+
+				const ribbonHeight = 10; // Adjust height as needed
+				doc.addImage(
+					`data:image/png;base64,${ribbonImgBase64}`,
+					'PNG',
+					0, // Start from the very left
+					pageHeight - 32, // Place ribbon above QR code and footer text
+					pageWidth, // Full width
+					ribbonHeight // Set height
+				);
+
+				// First line (normal)
+				doc.setFontSize(7);
+				doc.setTextColor('#4D4E53');
+				doc.setFont(undefined, 'normal');
+				doc.text(
+					'Travel Insurance plans are issued and insured by Insurance House PJSC, licensed by the UAE Insurance Authority, Registration number 89. Registered office at Orjowan',
+					textX,
+					firstLineY,
+					{ maxWidth: textContentWidth, align: 'left' }
+				);
+
+				doc.text(
+					'Building, Zayed 1st Street, Khalidiya Area, P.O.Box: 129921, Abu Dhabi, U.A.E.',
+					100,
+					pageHeight - 12,
+					{ maxWidth: textContentWidth, align: 'center' }
+				);
+				// Second line (bold)
+				doc.setFont(undefined, 'bold');
+				doc.text(
+					'This Document is not valid without the QR Code with “Green” Status, please scan the QR code to know the status of your policy. Do not accept this document ',
+					textX,
+					secondLineY,
+					{ maxWidth: textContentWidth, align: 'left' }
+				);
+
+				doc.text('without the QR code.', 100, secondLineY + 4, {
+					maxWidth: textContentWidth,
+					align: 'center',
+				});
+
+				// QR Code
+				if (data.policyQr) {
+					doc.addImage(data.policyQr, 'PNG', qrX, qrY, qrWidth, qrHeight);
+
+					// "Scan to validate" text below QR
+					doc
+						.setFontSize(8)
+						.setTextColor(0, 0, 0)
+						.text('Scan to validate', qrX + qrWidth / 2, qrY + qrHeight + 3, {
+							align: 'center',
+						});
+				}
+
+				//add end of doc
+				if (currentPage == pageCount) {
+					doc.setFontSize(10);
+					doc.text(
+						'**END OF DOCUMENT**',
+						pageWidth / 2,
+						doc.lastAutoTable.finalY + 55,
+						{ align: 'center' }
+					);
+				}
+
+				currentPage++;
+			}
+		}
+		return doc.output('arraybuffer');
+	}
+	return null;
+};
+
+module.exports = generateIhoCoi;

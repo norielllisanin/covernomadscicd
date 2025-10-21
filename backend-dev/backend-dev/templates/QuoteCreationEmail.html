@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<style>
+		body {
+			font-family: 'Poppins', sans-serif !important;
+		}
+		p {
+			margin: 0 !important;
+		}
+		.mb {
+			margin-bottom: 20px !important;
+		}
+		.text-bold {
+			font-weight: 500;
+			padding-top: 5px;
+			padding-bottom: 5px;
+		}
+		.number {
+			color: green;
+		}
+	</style>
+	<body>
+		<div
+			style="
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				text-align: center;
+			"
+		>
+			<img
+				src="https://storage.googleapis.com/coi_templates/IHO/iho%20logo%20and%20insurer.png"
+				alt="Image"
+				style="width: 100%; height: 150px; max-height: 150px"
+			/>
+		</div>
+
+		<p>Dear Traveler,</p>
+
+		<p class="mb"><strong>Number:</strong> {{code}}</p>
+		<p>
+			Thank you for your interest in Insurance House Travel insurance. We're
+			excited to hear from you, and we are happy to share a quotation along with
+			a policy summary and terms and conditions that you should carefully review
+			before taking the insurance to make sure it meets your needs.
+		</p>
+		<p>
+			If you are satisfied with the cover, you can pay your insurance premium
+			online using the payment link below,
+		</p>
+		<ul>
+			<li>
+				<a
+					href="{{quoteLink}}"
+					target="_blank"
+				>
+					Quotation pdf
+				</a>
+			</li>
+			{{#if paymentLink}}
+			<li>
+				<a
+					href="{{paymentLink}}"
+					target="_blank"
+					>Payment Link</a
+				>
+			</li>
+			{{/if}}
+			<!-- <li>
+				<a
+					href="{{paymentLink}}"
+					target="_blank"
+				>
+					Payment Link
+				</a>
+			</li> -->
+		</ul>
+		<p class="mb">
+			Once you make the payment, kindly inform the insurance intermediary you
+			are dealing with who will check the payment status and issue the policy
+			using our automated systems.
+		</p>
+		<p>
+			Subsequently, you may also write an email to
+			<span
+				><a
+					href="mailto:support@covernomads.com"
+					target="_blank"
+				>
+					support@covernomads.com
+				</a></span
+			>
+
+			to speed up the issuance and follow up with your insurance intermediary on
+			your behalf if needed.
+		</p>
+		<p>
+			Thank you for considering Insurance House for your travel insurance
+			requirements.
+		</p>
+		<p>Yours sincerely,</p>
+
+		<p>Insurance House PJSC</p>
+		<strong style="color: green">WhatsApp Support: +971 58 590 0690</strong>
+		<br />
+
+		<!-- image  -->
+		<!-- <img
+			src="https://storage.googleapis.com/coi_templates/IHO/CVN%20portrait%20logo.png"
+			alt=""
+			width="250px"
+		/> -->
+		<br />
+		<!-- <p class="text-bold">
+			WhatsApp Support for technology related servicing: +971 585900690
+		</p> -->
+		<strong class="text-bold">
+			This insurance is underwritten by Insurance House PJSC, an insurer
+			licensed in the United Arab Emirates, registration number CBUAE 89, and
+			registered with the Federal Tax Authority No 100287232100003.
+		</strong>
+		<!-- <p class="text-bold">
+			Copyright © 2025 Covernomads and ISA Insurance & Reinsurance Brokerage
+			(ISA RE) LTD
+		</p> -->
+		<br />
+		<strong class="text-bold">All rights reserved.</strong>
+		<br />
+		<p>
+			CONFIDENTIAL: This email and any files transmitted with it are
+			confidential and intended solely for the use of the individual or entity
+			to whom they are addressed. If you have received this email in error,
+			please notify the system manager. This message contains confidential
+			information and is intended only for the individual named. If you are not
+			the named addressee you should not disseminate, distribute or copy this
+			e-mail. Please notify the sender immediately by e-mail if you have
+			received this e-mail by mistake and delete this e-mail from your system.
+			If you are not the intended recipient you are notified that disclosing,
+			copying, distributing or taking any action in reliance on the contents of
+			this information is strictly prohibited.
+		</p>
+		<br />
+	</body>
+</html>

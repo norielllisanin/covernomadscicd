@@ -1,0 +1,38 @@
+{
+	"name": "covernomads-backend",
+	"version": "1.0.0",
+	"description": "Main backend service for the covernomads.",
+	"main": "server.js",
+	"author": "Ibrahim Farooq",
+	"license": "ISC",
+	"scripts": {
+		"dev": "nodemon server.js",
+		"start": "node server.js"
+	},
+	"dependencies": {
+		"@google-cloud/storage": "^6.12.0",
+		"@sendgrid/mail": "^8.1.4",
+		"axios": "^1.4.0",
+		"bcryptjs": "^2.4.3",
+		"cors": "^2.8.5",
+		"dotenv": "^16.3.1",
+		"express": "^4.18.2",
+		"express-validator": "^7.0.1",
+		"formidable": "^3.5.1",
+		"handlebars": "^4.7.8",
+		"jsonwebtoken": "^9.0.1",
+		"jspdf": "^2.5.1",
+		"jspdf-autotable": "^3.8.2",
+		"moment": "^2.29.4",
+		"moment-timezone": "^0.5.45",
+		"mongodb": "^5.7.0",
+		"nodemailer": "^6.9.4",
+		"qrcode": "^1.5.3",
+		"stripe": "^17.2.0",
+		"to-words": "^4.0.1",
+		"xlsx": "^0.18.5"
+	},
+	"devDependencies": {
+		"nodemon": "^3.0.1"
+	}
+}
