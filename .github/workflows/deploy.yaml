@@ -1,39 +1,53 @@
-name: Auto Deploy Node.js Site to aaPanel
+name: Deploy to Ubuntu Server
 
+# Trigger this workflow on push to main
 on:
   push:
     branches:
-      - main  # Change to your branch
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # 1️⃣ Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v0.1.6
+      # 2️⃣ Setup Node.js (version 18)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: 22
-          script: |
-            # Go to project folder
-            cd /www/wwwroot/covernomads-dev.mspgulf.com/backend/nheil
-            
-            # Pull latest code
-            git fetch --all
-            git reset --hard origin/main
-            
-            # Install dependencies
-            npm install
-            
-            # Build project (if using React/Vue/Next/etc.)
-            npm run build
-            
-            # Restart Node.js app if using PM2
-            pm2 restart example || pm2 start npm --name "npm" -- start
+          node-version: 18
 
-            echo "Deployment completed at $(date)"
+      # 3️⃣ Install dependencies locally (optional, ensures workflow passes)
+      - name: Install dependencies
+        run: npm ci
+
+      # 4️⃣ Deploy to Ubuntu server via SSH
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}       # your server IP
+          username: ${{ secrets.SSH_USER }}   # your server user
+          key: ${{ secrets.SSH_KEY }}         # private key from GitHub Secrets
+          script: |
+            # Trust the project directory
+            git config --global --add safe.directory /home/shaik/backend-dev/backend-dev
+
+            # Go to project folder
+            cd /home/shaik/backend-dev/backend-dev
+
+            # Pull latest code
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Install/update dependencies
+            npm install
+
+            # Reload Node.js app with PM2
+            #            pm2 reload backend-dev || pm2 start server.js --name backend-dev
+            pm2 reload covernomads-backend || pm2 start server.js --name covernomads-backend
+            # Optional: List files to confirm deployment
+            ls -l /home/shaik/backend-dev/backend-dev
