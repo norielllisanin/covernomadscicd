@@ -34,10 +34,10 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}         # private key from GitHub Secrets
           script: |
             # Trust the project directory
-            git config --global --add safe.directory /home/shaik/backend-dev/backend-dev
+            git config --global --add safe.directory /www/wwwroot/covernomads-dev.mspgulf.com/backend/nheil
 
             # Go to project folder
-            cd /home/shaik/backend-dev/backend-dev
+            cd /www/wwwroot/covernomads-dev.mspgulf.com/backend/nheil
 
             # Pull latest code
             git fetch origin main
